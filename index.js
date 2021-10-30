@@ -60,6 +60,7 @@ async function searchByKeyword(message) {
 // !play search-str
 // ac dc thunderstruyck
 async function execute(message, serverQueue) {
+  console.log("in execute " + message.content);
   const args = message.content.split(" ").splice(1, 1);
   console.log("args " + args);
 
@@ -158,7 +159,7 @@ function play(guild, song) {
     })
     .on("error", error => console.error(error));
   dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-  serverQueue.textChannel.send(`Start playing: **${song.title}**`);
+  serverQueue.textChannel.send(`Start playing: **${song.title}**\n**${song.url}**`);
 }
 
 function isValidHttpUrl(string) {
