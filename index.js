@@ -38,8 +38,30 @@ client.on("message", async message => {
   }
 });
 
+async function searchByKeyword(message) {
+  const yts = require("yt-search");
+
+  // Searches YouTube with the message content (this joins the arguments
+  // together because songs can have spaces)
+
+  message = message.join(' ');
+
+  const {videos} = await yts(message);
+  console.log("videos" + videos[0]);
+  if (!videos.length)
+    return message.channel.send("No songs were found!");
+  const song = {
+    title: videos[0].title,
+    url: videos[0].url
+  };
+  return song;
+}
+
+// !play search-str
+// ac dc thunderstruyck
 async function execute(message, serverQueue) {
-  const args = message.content.split(" ");
+  const args = message.content.split(" ").splice(1, 1);
+  console.log("args " + args);
 
   const voiceChannel = message.member.voice.channel;
   if (!voiceChannel)
@@ -53,11 +75,17 @@ async function execute(message, serverQueue) {
     );
   }
 
-  const songInfo = await ytdl.getInfo(args[1]);
-  const song = {
-        title: songInfo.videoDetails.title,
-        url: songInfo.videoDetails.video_url,
-   };
+  var song;
+  if (!isValidHttpUrl(args)) {
+    song = await searchByKeyword(args);
+    console.log("not a url");
+  } else {
+    const songInfo = await ytdl.getInfo(args);
+    song = {
+          title: songInfo.videoDetails.title,
+          url: songInfo.videoDetails.video_url,
+     };
+  }
 
   if (!serverQueue) {
     const queueContruct = {
@@ -74,6 +102,7 @@ async function execute(message, serverQueue) {
     queueContruct.songs.push(song);
 
     try {
+      console.log("trying to play... ");
       var connection = await voiceChannel.join();
       queueContruct.connection = connection;
       play(message.guild, queueContruct.songs[0]);
@@ -112,6 +141,8 @@ function stop(message, serverQueue) {
 }
 
 function play(guild, song) {
+  console.log("song: " + song);
+
   const serverQueue = queue.get(guild.id);
   if (!song) {
     serverQueue.voiceChannel.leave();
@@ -129,5 +160,24 @@ function play(guild, song) {
   dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
   serverQueue.textChannel.send(`Start playing: **${song.title}**`);
 }
+
+function isValidHttpUrl(string) {
+  let url;
+
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false;
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
+
+/*function searchByKeyword(message) {
+  var results = YouTube.Search.list('id,snippet', {q: message, maxResults: 25});
+  var item = results.items[0];
+  return item.url;
+}*/
 
 client.login(token);
