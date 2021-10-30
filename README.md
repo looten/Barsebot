@@ -1,0 +1,2 @@
+# Barsebot
+Discord music bot
