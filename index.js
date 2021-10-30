@@ -152,6 +152,7 @@ function play(guild, song) {
   }
 
   const dispatcher = serverQueue.connection
+    //.play(ytdl(song.url, { filter: quality  => format.quality === 'highestaudio' }))
     .play(ytdl(song.url))
     .on("finish", () => {
       serverQueue.songs.shift();
